@@ -588,19 +588,6 @@ char handle_title() {
 	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 0);	
 	SMS_loadBGPalette(title_palette_bin);
 	SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
-		
-	SMS_load1bppTiles(font_1bpp, 352, font_1bpp_size, 0, 12);
-	SMS_configureTextRenderer(352 - 32);
-	
-	SMS_setNextTileatXY(3, 16);
-	puts("Press any button to start");
-
-	SMS_setNextTileatXY(3, 18);
-	puts("Last score:");
-	SMS_setNextTileatXY(3, 19);
-	printf("Player 1: %d Player 2: %d", score1->value, score2->value);
-	SMS_setNextTileatXY(3, 20);
-	printf("Player 3: %d Player 4: %d", score3->value, score4->value);
 	
 	SMS_displayOn();
 	
@@ -616,38 +603,16 @@ char handle_title() {
 		joy = SMS_getKeysStatus();
 	} while ((joy & (PORT_A_KEY_1 | PORT_A_KEY_2 | PORT_B_KEY_1 | PORT_B_KEY_2)));
 
-	return STATE_GAMEPLAY;
+	return 0;
 }
 
 void main() {
-	char state = STATE_START;
-	
-	SMS_useFirstHalfTilesforSprites(1);
-	SMS_setSpriteMode(SPRITEMODE_TALL);
-	SMS_VDPturnOnFeature(VDPFEATURE_HIDEFIRSTCOL);
-	SMS_VDPturnOnFeature(VDPFEATURE_LOCKHSCROLL);
-	
-	clear_scores();
-	
 	while (1) {
-		switch (state) {
-			
-		case STATE_START:
-			state = handle_title();
-			break;
-			
-		case STATE_GAMEPLAY:
-			state = gameplay_loop();
-			break;
-			
-		case STATE_GAMEOVER:
-			state = handle_gameover();
-			break;
-		}
+		handle_title();
 	}
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,4, 2021,12,12, "Haroldo-OK\\2021", "Chicken Crossing",
-  "Made for The Honest Jam III - https://itch.io/jam/honest-jam-3.\n"
+SMS_EMBED_SDSC_HEADER(0,1, 2023,10,12, "Haroldo-OK\\2023", "Pocket Platformer Converter",
+  "Convert Pocket Platformer Projects to SMS.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");
