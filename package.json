@@ -1,0 +1,19 @@
+{
+  "name": "pocket-platformer-to-sms",
+  "version": "0.1.0",
+  "description": "Experiment on converting pocket platformer projects into a Sega Master System ROM",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haroldo-ok/pocket-platformer-to-sms.git"
+  },
+  "author": "Haroldo O. Pinheiro",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/haroldo-ok/pocket-platformer-to-sms/issues"
+  },
+  "homepage": "https://github.com/haroldo-ok/pocket-platformer-to-sms#readme"
+}
