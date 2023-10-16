@@ -1,10 +1,12 @@
 'use strict';
 
- const tmx = require('tmx-parser');
+const fs = require('fs');
+
+const tmx = require('tmx-parser');
+
+const arrayOfSize = n => Array(n).fill();
  
- const arrayOfSize = n => Array(n).fill();
- 
- tmx.parseFile('original/pocket-platformer.level-3.tmx', function(err, map) {
+tmx.parseFile('original/pocket-platformer.level-3.tmx', function(err, map) {
 	if (err) throw err;
 
 	const { width, height } = map;
@@ -16,6 +18,7 @@
 		const tile = layer.tileAt(x, y);
 		return tile ? tile.gid : 0;
 	}));
-
-	console.log({ width, height, columns });	  
+		
+	const buffer = Buffer.from([width, height, ...columns.flat()], 'application/octet-stream');
+	fs.writeFileSync('experiment/data/map3.bin', buffer, 'binary');
 });
