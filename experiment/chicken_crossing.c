@@ -42,6 +42,18 @@ actor *player3 = actors + 2;
 actor *player4 = actors + 3;
 actor *first_spawner = actors + MAX_PLAYERS;
 
+
+#define MAX_MAP_COLUMNS (64)
+
+typedef struct map_header {
+	char w, h;
+} map_header;
+
+map_header *pmap_header = (void *) map3_bin;
+char *map_colunms[MAX_MAP_COLUMNS];
+unsigned int tilemap_buffer[SCREEN_CHAR_H];
+
+
 int animation_delay;
 
 typedef struct score_data {
@@ -582,12 +594,34 @@ char handle_title() {
 	SMS_displayOff();
 	SMS_disableLineInterrupt();
 
+	SMS_VRAMmemset (0, 0, 0xFFFF); 
 	reset_actors_and_player();
 	clear_sprites();
 
-	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 0);	
+	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 1);	
 	SMS_loadBGPalette(title_palette_bin);
-	SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
+	
+	// Prepare column pointer table
+	char *map_cell = ((char *) pmap_header) + sizeof(map_header);
+	for (char colNum = 0; colNum < SCREEN_CHAR_W; colNum++) {
+		map_colunms[colNum] = map_cell;
+		map_cell += pmap_header->h;
+	}
+
+	// Draw background
+	for (char colNum = 0; colNum < SCREEN_CHAR_W; colNum++) {
+		char *o = map_colunms[colNum];
+		unsigned int *d = tilemap_buffer;
+		for (char rowNum = 0; rowNum < pmap_header->h; rowNum++) {
+			*d = *o;
+			d++;
+			o++;			
+		}
+		SMS_loadTileMapArea(colNum, 0, tilemap_buffer, 1, pmap_header->h);
+	}
+	
+	
+	//SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
 	
 	SMS_displayOn();
 	
@@ -613,6 +647,6 @@ void main() {
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,1, 2023,10,12, "Haroldo-OK\\2023", "Pocket Platformer Converter",
+SMS_EMBED_SDSC_HEADER(0,2, 2023,10,17, "Haroldo-OK\\2023", "Pocket Platformer Converter",
   "Convert Pocket Platformer Projects to SMS.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");
