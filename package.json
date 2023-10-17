@@ -1,6 +1,6 @@
 {
   "name": "pocket-platformer-to-sms",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Experiment on converting pocket platformer projects into a Sega Master System ROM",
   "main": "index.js",
   "scripts": {
