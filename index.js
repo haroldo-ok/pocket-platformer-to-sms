@@ -21,8 +21,12 @@ tmx.parseFile('original/pocket-platformer.level-3.tmx', function(err, map) {
 		return tile ? tile.gid : 0;
 	}));
 	
-	console.log(findMapLayerOfType(map, 'object').objects);
+	const objects = findMapLayerOfType(map, 'object').objects.map(({ x, y, gid }) => ({ x, y, gid }));
 		
-	const buffer = Buffer.from([width, height, ...columns.flat()], 'application/octet-stream');
+	const buffer = Buffer.from([
+		width, height, objects.length,
+		...columns.flat(),
+		objects.map(({ x, y, gid }) => [x, y, gid]).flat()
+	], 'application/octet-stream');
 	fs.writeFileSync('experiment/data/map3.bin', buffer, 'binary');
 });
