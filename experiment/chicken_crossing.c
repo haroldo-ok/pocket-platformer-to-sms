@@ -47,7 +47,12 @@ actor *first_spawner = actors + MAX_PLAYERS;
 
 typedef struct map_header {
 	char w, h;
+	char objectCount;
 } map_header;
+
+typedef struct map_object {
+	char x, y, tile;
+} map_object;
 
 map_header *pmap_header = (void *) map3_bin;
 char *map_colunms[MAX_MAP_COLUMNS];
@@ -620,6 +625,15 @@ char handle_title() {
 		SMS_loadTileMapArea(colNum, 0, tilemap_buffer, 1, pmap_header->h);
 	}
 	
+	// Draw sprites
+	map_object *objectList = ((void *) pmap_header) + sizeof(map_header) + (pmap_header->w * pmap_header->h);
+	SMS_initSprites();	
+	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {
+		map_object *obj = objectList;
+		SMS_addSprite(obj->x, obj->y, obj->tile);		
+	}
+	SMS_finalizeSprites();	
+	SMS_copySpritestoSAT();	
 	
 	//SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
 	
