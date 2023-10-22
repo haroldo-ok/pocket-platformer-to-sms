@@ -606,6 +606,9 @@ char handle_title() {
 	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 1);	
 	SMS_loadBGPalette(title_palette_bin);
 	
+	SMS_load1bppTiles(font_1bpp, 352, font_1bpp_size, 0, 12);
+	SMS_configureTextRenderer(352 - 32);
+
 	// Prepare column pointer table
 	char *map_cell = ((char *) pmap_header) + sizeof(map_header);
 	for (char colNum = 0; colNum < SCREEN_CHAR_W; colNum++) {
@@ -626,11 +629,17 @@ char handle_title() {
 	}
 	
 	// Draw sprites
-	map_object *objectList = ((void *) pmap_header) + sizeof(map_header) + (pmap_header->w * pmap_header->h);
+	map_object *objectList = (void *) (((char *) pmap_header) + sizeof(map_header) + (pmap_header->w * pmap_header->h));
 	SMS_initSprites();	
-	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {
-		map_object *obj = objectList;
-		SMS_addSprite(obj->x, obj->y, obj->tile);		
+	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {		
+		map_object *obj = objectList + objectNum;
+		
+		if (objectNum < 4) {
+			SMS_setNextTileatXY(1, objectNum + 1);
+			printf("%d: %d, %d, %d", objectNum, obj->x, obj->y, obj->tile);
+		}
+		
+		SMS_addSprite(obj->x, obj->y, obj->tile);
 	}
 	SMS_finalizeSprites();	
 	SMS_copySpritestoSAT();	
