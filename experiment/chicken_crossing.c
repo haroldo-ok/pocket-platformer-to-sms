@@ -597,14 +597,17 @@ char handle_title() {
 
 	SMS_waitForVBlank();
 	SMS_displayOff();
-	SMS_disableLineInterrupt();
+	SMS_disableLineInterrupt();	
 
 	SMS_VRAMmemset (0, 0, 0xFFFF); 
 	reset_actors_and_player();
 	clear_sprites();
-
+	
 	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 1);	
 	SMS_loadBGPalette(title_palette_bin);
+	
+	SMS_useFirstHalfTilesforSprites(1);
+	SMS_loadSpritePalette(title_palette_bin);
 	
 	SMS_load1bppTiles(font_1bpp, 352, font_1bpp_size, 0, 12);
 	SMS_configureTextRenderer(352 - 32);
@@ -634,12 +637,14 @@ char handle_title() {
 	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {		
 		map_object *obj = objectList + objectNum;
 		
+		/*
 		if (objectNum < 4) {
 			SMS_setNextTileatXY(1, objectNum + 1);
 			printf("%d: %d, %d, %d", objectNum, obj->x, obj->y, obj->tile);
 		}
+		*/
 		
-		SMS_addSprite(obj->x, obj->y, obj->tile);
+		SMS_addSprite(obj->x, obj->y - 8, obj->tile);
 	}
 	SMS_finalizeSprites();	
 	SMS_copySpritestoSAT();	
