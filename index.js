@@ -22,11 +22,17 @@ tmx.parseFile('original/pocket-platformer.level-3.tmx', function(err, map) {
 	}));
 	
 	const objects = findMapLayerOfType(map, 'object').objects.map(({ x, y, gid }) => ({ x, y, gid }));
+	
+	const headerBytes = [width, height, objects.length];
+	const columnBytes = columns.flat();
+	const objectBytes = objects.map(({ x, y, gid }) => [x, y, gid]).flat();
+	
+	const bytes = [
+		...headerBytes,
+		...columnBytes,
+		...objectBytes
+	]
 		
-	const buffer = Buffer.from([
-		width, height, objects.length,
-		...columns.flat(),
-		objects.map(({ x, y, gid }) => [x, y, gid]).flat()
-	], 'application/octet-stream');
+	const buffer = Buffer.from(bytes, 'application/octet-stream');
 	fs.writeFileSync('experiment/data/map3.bin', buffer, 'binary');
 });
