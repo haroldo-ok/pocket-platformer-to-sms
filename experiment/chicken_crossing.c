@@ -47,7 +47,12 @@ actor *first_spawner = actors + MAX_PLAYERS;
 
 typedef struct map_header {
 	char w, h;
+	char objectCount;
 } map_header;
+
+typedef struct map_object {
+	char x, y, tile;
+} map_object;
 
 map_header *pmap_header = (void *) map3_bin;
 char *map_colunms[MAX_MAP_COLUMNS];
@@ -592,15 +597,21 @@ char handle_title() {
 
 	SMS_waitForVBlank();
 	SMS_displayOff();
-	SMS_disableLineInterrupt();
+	SMS_disableLineInterrupt();	
 
 	SMS_VRAMmemset (0, 0, 0xFFFF); 
 	reset_actors_and_player();
 	clear_sprites();
-
+	
 	SMS_loadPSGaidencompressedTiles(title_tiles_psgcompr, 1);	
 	SMS_loadBGPalette(title_palette_bin);
 	
+	SMS_useFirstHalfTilesforSprites(1);
+	SMS_loadSpritePalette(title_palette_bin);
+	
+	SMS_load1bppTiles(font_1bpp, 352, font_1bpp_size, 0, 12);
+	SMS_configureTextRenderer(352 - 32);
+
 	// Prepare column pointer table
 	char *map_cell = ((char *) pmap_header) + sizeof(map_header);
 	for (char colNum = 0; colNum < SCREEN_CHAR_W; colNum++) {
@@ -620,6 +631,23 @@ char handle_title() {
 		SMS_loadTileMapArea(colNum, 0, tilemap_buffer, 1, pmap_header->h);
 	}
 	
+	// Draw sprites
+	map_object *objectList = (void *) (((char *) pmap_header) + sizeof(map_header) + (pmap_header->w * pmap_header->h));
+	SMS_initSprites();	
+	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {		
+		map_object *obj = objectList + objectNum;
+		
+		/*
+		if (objectNum < 4) {
+			SMS_setNextTileatXY(1, objectNum + 1);
+			printf("%d: %d, %d, %d", objectNum, obj->x, obj->y, obj->tile);
+		}
+		*/
+		
+		SMS_addSprite(obj->x, obj->y - 8, obj->tile);
+	}
+	SMS_finalizeSprites();	
+	SMS_copySpritestoSAT();	
 	
 	//SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
 	
@@ -647,6 +675,6 @@ void main() {
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,2, 2023,10,17, "Haroldo-OK\\2023", "Pocket Platformer Converter",
+SMS_EMBED_SDSC_HEADER(0,3, 2023,10,22, "Haroldo-OK\\2023", "Pocket Platformer Converter",
   "Convert Pocket Platformer Projects to SMS.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");
