@@ -675,6 +675,6 @@ void main() {
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,3, 2023,10,22, "Haroldo-OK\\2023", "Pocket Platformer Converter",
+SMS_EMBED_SDSC_HEADER(0,4, 2023,10,26, "Haroldo-OK\\2023", "Pocket Platformer Converter",
   "Convert Pocket Platformer Projects to SMS.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");

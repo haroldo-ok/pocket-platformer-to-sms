@@ -21,11 +21,11 @@ tmx.parseFile('original/pocket-platformer.level-3.tmx', function(err, map) {
 		return tile ? tile.gid : 0;
 	}));
 	
-	const objects = findMapLayerOfType(map, 'object').objects.map(({ x, y, gid }) => ({ x, y, gid }));
+	const objects = findMapLayerOfType(map, 'object').objects.map(({ x, y, gid }) => ({ x, y, tileNumber: gid - 1 }));
 	
 	const headerBytes = [width, height, objects.length];
 	const columnBytes = columns.flat();
-	const objectBytes = objects.map(({ x, y, gid }) => [x, y, gid]).flat();
+	const objectBytes = objects.map(({ x, y, tileNumber }) => [x, y, tileNumber]).flat();
 	
 	const bytes = [
 		...headerBytes,
