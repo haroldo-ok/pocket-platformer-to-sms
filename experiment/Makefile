@@ -1,5 +1,5 @@
-PRJNAME := chicken_crossing
-OBJS := data.rel actor.rel chicken_crossing.rel
+PRJNAME := pocket_platformer
+OBJS := data.rel actor.rel $(PRJNAME).rel
 
 all: $(PRJNAME).sms
 
