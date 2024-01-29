@@ -58,8 +58,13 @@ void draw_background() {
 	draw_background_map(background_tilemap_bin);
 }
 
-char handle_title() {
-	unsigned int joy = SMS_getKeysStatus();
+map_object *getObjectList() {
+	return (void *) (((char *) pmap_header) + sizeof(map_header) + (pmap_header->w * pmap_header->h));
+}
+
+
+char gameplay_loop() {
+	unsigned int joy = 0;
 
 	SMS_waitForVBlank();
 	SMS_displayOff();
@@ -95,47 +100,42 @@ char handle_title() {
 		}
 		SMS_loadTileMapArea(colNum, 0, tilemap_buffer, 1, pmap_header->h);
 	}
-	
-	// Draw sprites
-	map_object *objectList = (void *) (((char *) pmap_header) + sizeof(map_header) + (pmap_header->w * pmap_header->h));
-	SMS_initSprites();	
-	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {		
-		map_object *obj = objectList + objectNum;
 		
-		/*
-		if (objectNum < 4) {
-			SMS_setNextTileatXY(1, objectNum + 1);
-			printf("%d: %d, %d, %d", objectNum, obj->x, obj->y, obj->tile);
-		}
-		*/
-		
-		SMS_addSprite(obj->x, obj->y - 8, obj->tile);
-	}
-	SMS_finalizeSprites();	
-	SMS_copySpritestoSAT();	
-	
 	//SMS_loadTileMap(0, 0, title_tilemap_bin, title_tilemap_bin_size);
 	
 	SMS_displayOn();
 	
-	// Wait button press
-	do {
-		SMS_waitForVBlank();
+	while (1) {
 		joy = SMS_getKeysStatus();
-	} while (!(joy & (PORT_A_KEY_1 | PORT_A_KEY_2 | PORT_B_KEY_1 | PORT_B_KEY_2)));
+		
+		SMS_initSprites();	
 
-	// Wait button release
-	do {
+		// Draw sprites
+		map_object *objectList = getObjectList();
+		for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {		
+			map_object *obj = objectList + objectNum;
+			
+			/*
+			if (objectNum < 4) {
+				SMS_setNextTileatXY(1, objectNum + 1);
+				printf("%d: %d, %d, %d", objectNum, obj->x, obj->y, obj->tile);
+			}
+			*/
+			
+			SMS_addSprite(obj->x, obj->y - 8, obj->tile);
+		}
+		SMS_finalizeSprites();	
+
 		SMS_waitForVBlank();
-		joy = SMS_getKeysStatus();
-	} while ((joy & (PORT_A_KEY_1 | PORT_A_KEY_2 | PORT_B_KEY_1 | PORT_B_KEY_2)));
+		SMS_copySpritestoSAT();	
+	}
 
 	return 0;
 }
 
 void main() {
 	while (1) {
-		handle_title();
+		gameplay_loop();
 	}
 }
 
