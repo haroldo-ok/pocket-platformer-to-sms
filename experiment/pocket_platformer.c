@@ -122,6 +122,12 @@ char gameplay_loop() {
 	while (1) {
 		joy = SMS_getKeysStatus();
 		
+		if (joy & PORT_A_KEY_LEFT) {
+			player.x--;
+		} else if (joy & PORT_A_KEY_RIGHT) {
+			player.x++;
+		}
+
 		SMS_initSprites();	
 
 		// Draw sprites
