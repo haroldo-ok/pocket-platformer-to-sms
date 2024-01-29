@@ -11,6 +11,10 @@
 #define SCROLL_H (224)
 
 #define MAX_MAP_COLUMNS (64)
+#define TILE_PLAYER (15)
+#define TILE_LEVEL_START (19)
+
+actor player;
 
 typedef struct map_header {
 	char w, h;
@@ -105,6 +109,16 @@ char gameplay_loop() {
 	
 	SMS_displayOn();
 	
+	// Spawn player
+	map_object *objectList = getObjectList();
+	for (char objectNum = 0; objectNum < pmap_header->objectCount; objectNum++) {		
+		map_object *obj = objectList + objectNum;
+		
+		if (obj->tile == TILE_LEVEL_START) {
+			init_actor(&player, obj->x, obj->y - 8, 1, 1, TILE_PLAYER, 1);
+		}
+	}
+	
 	while (1) {
 		joy = SMS_getKeysStatus();
 		
@@ -124,6 +138,9 @@ char gameplay_loop() {
 			
 			SMS_addSprite(obj->x, obj->y - 8, obj->tile);
 		}
+		
+		draw_actor(&player);
+		
 		SMS_finalizeSprites();	
 
 		SMS_waitForVBlank();
