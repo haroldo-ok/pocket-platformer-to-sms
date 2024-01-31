@@ -17,6 +17,7 @@
 // TODO: Read from config
 #define PLAYER_MAX_SPEED ((int) (3.2 * 0x100))
 #define PLAYER_GROUND_ACCELLERATION ((int) (0.8 * 0x100))
+#define PLAYER_GROUND_FRICTION ((int) (0.65 * 0x100))
 
 actor player;
 
@@ -46,6 +47,7 @@ void load_standard_palettes() {
 
 void handle_player_input() {
 	unsigned int joy = SMS_getKeysStatus();
+	char walking = 0;
 	
 	if (joy & PORT_A_KEY_LEFT) {
 		if (player.displacement_x.speed.w - PLAYER_GROUND_ACCELLERATION > -PLAYER_MAX_SPEED) {
@@ -70,6 +72,7 @@ void handle_player_input() {
 			}
 		}
 		*/
+		walking = 1;
 	} else if (joy & PORT_A_KEY_RIGHT) {
 		if (player.displacement_x.speed.w + PLAYER_GROUND_ACCELLERATION < PLAYER_MAX_SPEED) {
 			player.displacement_x.speed.w += PLAYER_GROUND_ACCELLERATION;
@@ -93,8 +96,23 @@ void handle_player_input() {
                     }
                 }
 		*/
+		walking = 1;
 	}
 
+	if (!walking) {
+		player.displacement_x.speed.w = (player.displacement_x.speed.w * PLAYER_GROUND_FRICTION) >> 8;
+		if (abs(player.displacement_x.speed.w) < 0x80) {
+			player.displacement_x.speed.w = 0;
+		}
+		/*
+        if (!player.fixedSpeed) {
+            player.xspeed *= player.friction;
+            if (Math.abs(player.xspeed) < 0.5) {
+                player.xspeed = 0;
+            }
+        }
+		*/
+	}
 }
 
 void move_player() {
