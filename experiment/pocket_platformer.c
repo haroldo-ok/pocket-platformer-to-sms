@@ -14,6 +14,10 @@
 #define TILE_PLAYER (15)
 #define TILE_LEVEL_START (19)
 
+// TODO: Read from config
+#define PLAYER_MAX_SPEED ((int) (3.2 * 0x100))
+#define PLAYER_GROUND_ACCELLERATION ((int) (0.8 * 0x100))
+
 actor player;
 
 typedef struct map_header {
@@ -44,11 +48,59 @@ void handle_player_input() {
 	unsigned int joy = SMS_getKeysStatus();
 	
 	if (joy & PORT_A_KEY_LEFT) {
-		player.x--;
+		if (player.displacement_x.speed.w - PLAYER_GROUND_ACCELLERATION > -PLAYER_MAX_SPEED) {
+			player.displacement_x.speed.w -= PLAYER_GROUND_ACCELLERATION;
+		}
+		/*
+		if (player.xspeed - player.speed > newMaxSpeed * -1) {
+			player.xspeed -= player.speed;
+		}
+		else if (player.xspeed > newMaxSpeed * -1 && player.wallJumping) {
+			player.xspeed -= player.speed;
+		}
+		else {
+			if (player.swimming) {
+				player.xspeed = newMaxSpeed * -1;
+			}
+			else {
+				const restSpeed = player.currentMaxSpeed + player.xspeed;
+				if (restSpeed > 0) {
+					player.xspeed -= restSpeed;
+				}
+			}
+		}
+		*/
 	} else if (joy & PORT_A_KEY_RIGHT) {
-		player.x++;
+		if (player.displacement_x.speed.w + PLAYER_GROUND_ACCELLERATION < PLAYER_MAX_SPEED) {
+			player.displacement_x.speed.w += PLAYER_GROUND_ACCELLERATION;
+		}
+		/*
+                if (player.xspeed + player.speed < newMaxSpeed) {
+                    player.xspeed += player.speed;
+                }
+                else if (player.xspeed < newMaxSpeed && player.wallJumping) {
+                    player.xspeed += player.speed;
+                }
+                else {
+                    if (player.swimming) {
+                        player.xspeed = newMaxSpeed;
+                    }
+                    else {
+                        const restSpeed = player.currentMaxSpeed - player.xspeed;
+                        if (restSpeed > 0) {
+                            player.xspeed += restSpeed;
+                        }
+                    }
+                }
+		*/
 	}
 
+}
+
+void move_player() {
+	player.displacement_x.displacement.w += player.displacement_x.speed.w;
+	player.x += player.displacement_x.displacement.b.h;
+	player.displacement_x.displacement.b.h = 0;
 }
 
 void draw_background_map(void *map) {
@@ -122,11 +174,16 @@ char gameplay_loop() {
 		
 		if (obj->tile == TILE_LEVEL_START) {
 			init_actor(&player, obj->x, obj->y - 8, 1, 1, TILE_PLAYER, 1);
+			player.displacement_x.displacement.w = 0;
+			player.displacement_x.speed.w = 0;
+			player.displacement_y.displacement.w = 0;
+			player.displacement_y.speed.w = 0;
 		}
 	}
 	
 	while (1) {
 		handle_player_input();
+		move_player();
 		
 		SMS_initSprites();	
 
@@ -152,8 +209,6 @@ char gameplay_loop() {
 		SMS_waitForVBlank();
 		SMS_copySpritestoSAT();	
 	}
-
-	return 0;
 }
 
 void main() {

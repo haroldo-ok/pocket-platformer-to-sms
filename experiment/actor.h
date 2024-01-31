@@ -21,6 +21,10 @@ typedef union _fixed {
   int w;
 } fixed;
 
+typedef struct _displacement {
+	fixed displacement, speed;
+} displacement;
+
 typedef struct _path_step {
 	signed char x, y;
 } path_step;
@@ -35,6 +39,8 @@ typedef struct actor {
 	char active;
 	
 	int x, y;
+	
+	displacement displacement_x, displacement_y;
 	
 	int spd_x;
 	char facing_left;
