@@ -100,7 +100,7 @@ void handle_player_input() {
 	}
 
 	if (!walking) {
-		player.displacement_x.speed.w = (player.displacement_x.speed.w * PLAYER_GROUND_FRICTION) >> 8;
+		player.displacement_x.speed.w = (player.displacement_x.speed.w >> 4) * (PLAYER_GROUND_FRICTION >> 4);
 		if (abs(player.displacement_x.speed.w) < 0x80) {
 			player.displacement_x.speed.w = 0;
 		}
