@@ -14,6 +14,8 @@
 #define TILE_PLAYER (15)
 #define TILE_LEVEL_START (19)
 
+#define TILE_SIZE (8)
+
 // TODO: Read from config
 #define PLAYER_MAX_SPEED ((int) (3.2 * 0x100))
 #define PLAYER_GROUND_ACCELLERATION ((int) (0.8 * 0x100))
@@ -43,6 +45,66 @@ void load_standard_palettes() {
 	SMS_loadBGPalette(background_palette_bin);
 	SMS_loadSpritePalette(sprites_palette_bin);
 	SMS_setSpritePaletteColor(0, 0);
+}
+
+int getTileValueForPosition(int pos) {
+	return pos >> 4;
+}
+
+int getTileLayerValueByIndex(int y, int x) {
+	return map_colunms[x][y];
+	// return this.tileMap[y]?.[x];
+}
+
+void  checkTileCollisions(actor *obj, char cornerCorrection) {
+	obj->displacement_x.displacement.w += obj->displacement_x.speed.w;
+	obj->x += obj->displacement_x.displacement.b.h;
+	obj->displacement_x.displacement.b.h = 0;	
+
+	// collision to the left
+	if (obj->displacement_x.speed.w < 0) {
+		/*
+		if (!this.passableTiles.includes(obj.top_left)
+			|| !this.passableTiles.includes(obj.bottom_left)) {
+			obj.x = (obj.left + 1) * tileMapHandler.tileSize;
+			obj.hitWall(AnimationHelper.facingDirections.left);
+		}
+		*/
+	}
+
+	// collision to the right
+	else if (obj->displacement_x.speed.w > 0) {
+        int rightX = obj->x + TILE_SIZE;
+        int topY = obj->y;
+		
+        int right = getTileValueForPosition(rightX);
+        int top = getTileValueForPosition(topY);
+		char top_right = getTileLayerValueByIndex(top, right);
+
+		if (!top_right) {
+			obj->x = (right << 3) - (TILE_SIZE + 1);
+		}
+		/*
+		if (!this.passableTiles.includes(obj.top_right)
+			|| !this.passableTiles.includes(obj.bottom_right)) {
+			obj.x = obj.right * tileMapHandler.tileSize - (obj.width + 1);
+			obj.hitWall(AnimationHelper.facingDirections.right);
+		}
+		*/
+	}
+}
+
+void  checkCollisionsWithWorld(actor *obj, char cornerCorrection) {
+	checkTileCollisions(obj, cornerCorrection);
+	/*
+    static checkCollisionsWithWorld(obj, cornerCorrection = false) {
+        this.checkHazardsCollision(obj);
+        this.groundUnderFeet(obj);
+        obj.xspeed += obj.bonusSpeed;
+        this.checkTileCollisions(obj, cornerCorrection);
+        obj.xspeed -= obj.bonusSpeed;
+    }
+	*/
 }
 
 void handle_player_input() {
@@ -112,13 +174,11 @@ void handle_player_input() {
             }
         }
 		*/
-	}
+	}	
 }
 
 void move_player() {
-	player.displacement_x.displacement.w += player.displacement_x.speed.w;
-	player.x += player.displacement_x.displacement.b.h;
-	player.displacement_x.displacement.b.h = 0;
+	checkCollisionsWithWorld(&player, 1);	
 }
 
 void draw_background_map(void *map) {
