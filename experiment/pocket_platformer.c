@@ -48,12 +48,16 @@ void load_standard_palettes() {
 }
 
 int getTileValueForPosition(int pos) {
-	return pos >> 4;
+	return pos >> 3;
 }
 
 int getTileLayerValueByIndex(int y, int x) {
 	return map_colunms[x][y];
 	// return this.tileMap[y]?.[x];
+}
+
+int isPassableTile(char tile) {
+	return !tile;
 }
 
 void  checkTileCollisions(actor *obj, char cornerCorrection) {
@@ -74,14 +78,21 @@ void  checkTileCollisions(actor *obj, char cornerCorrection) {
 
 	// collision to the right
 	else if (obj->displacement_x.speed.w > 0) {
-        int rightX = obj->x + TILE_SIZE;
+        int rightX = obj->x + TILE_SIZE - 1;
+        int bottomY = obj->y + TILE_SIZE - 1;
         int topY = obj->y;
 		
         int right = getTileValueForPosition(rightX);
+        int bottom = getTileValueForPosition(bottomY);
         int top = getTileValueForPosition(topY);
+		
 		char top_right = getTileLayerValueByIndex(top, right);
+		char bottom_right = getTileLayerValueByIndex(bottom, right);
 
-		if (!top_right) {
+		SMS_setNextTileatXY(1, 1);
+		printf("%d %d %d", right, top, top_right);
+		
+		if (!isPassableTile(top_right) || !isPassableTile(bottom_right)) {
 			obj->x = (right << 3) - (TILE_SIZE + 1);
 		}
 		/*
