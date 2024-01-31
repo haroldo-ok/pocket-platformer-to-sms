@@ -67,6 +67,21 @@ void  checkTileCollisions(actor *obj, char cornerCorrection) {
 
 	// collision to the left
 	if (obj->displacement_x.speed.w < 0) {
+        int leftX = obj->x;
+        int bottomY = obj->y + TILE_SIZE - 1;
+        int topY = obj->y;
+
+        int left = getTileValueForPosition(leftX);
+        int bottom = getTileValueForPosition(bottomY);
+        int top = getTileValueForPosition(topY);
+
+        char top_left = getTileLayerValueByIndex(top, left);
+        char bottom_left = getTileLayerValueByIndex(bottom, left);
+
+		if (!isPassableTile(top_left) || !isPassableTile(bottom_left)) {
+			obj->x = (left + 1) << 3;
+		}
+
 		/*
 		if (!this.passableTiles.includes(obj.top_left)
 			|| !this.passableTiles.includes(obj.bottom_left)) {
@@ -89,9 +104,6 @@ void  checkTileCollisions(actor *obj, char cornerCorrection) {
 		char top_right = getTileLayerValueByIndex(top, right);
 		char bottom_right = getTileLayerValueByIndex(bottom, right);
 
-		SMS_setNextTileatXY(1, 1);
-		printf("%d %d %d", right, top, top_right);
-		
 		if (!isPassableTile(top_right) || !isPassableTile(bottom_right)) {
 			obj->x = (right << 3) - (TILE_SIZE + 1);
 		}
