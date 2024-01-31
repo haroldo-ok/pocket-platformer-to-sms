@@ -42,6 +42,12 @@ void load_standard_palettes() {
 
 void handle_player_input() {
 	unsigned int joy = SMS_getKeysStatus();
+	
+	if (joy & PORT_A_KEY_LEFT) {
+		player.x--;
+	} else if (joy & PORT_A_KEY_RIGHT) {
+		player.x++;
+	}
 
 }
 
@@ -120,14 +126,8 @@ char gameplay_loop() {
 	}
 	
 	while (1) {
-		joy = SMS_getKeysStatus();
+		handle_player_input();
 		
-		if (joy & PORT_A_KEY_LEFT) {
-			player.x--;
-		} else if (joy & PORT_A_KEY_RIGHT) {
-			player.x++;
-		}
-
 		SMS_initSprites();	
 
 		// Draw sprites
