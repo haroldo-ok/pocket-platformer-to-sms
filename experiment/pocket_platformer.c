@@ -14,6 +14,13 @@
 #define TILE_PLAYER (15)
 #define TILE_LEVEL_START (19)
 
+#define TILE_SIZE (8)
+
+// TODO: Read from config
+#define PLAYER_MAX_SPEED ((int) (3.2 * 0x100))
+#define PLAYER_GROUND_ACCELLERATION ((int) (0.8 * 0x100))
+#define PLAYER_GROUND_FRICTION ((int) (0.65 * 0x100))
+
 actor player;
 
 typedef struct map_header {
@@ -40,9 +47,161 @@ void load_standard_palettes() {
 	SMS_setSpritePaletteColor(0, 0);
 }
 
+int getTileValueForPosition(int pos) {
+	return pos >> 3;
+}
+
+int getTileLayerValueByIndex(int y, int x) {
+	return map_colunms[x][y];
+	// return this.tileMap[y]?.[x];
+}
+
+int isPassableTile(char tile) {
+	return !tile;
+}
+
+void  checkTileCollisions(actor *obj, char cornerCorrection) {
+	obj->displacement_x.displacement.w += obj->displacement_x.speed.w;
+	obj->x += obj->displacement_x.displacement.b.h;
+	obj->displacement_x.displacement.b.h = 0;	
+
+	// collision to the left
+	if (obj->displacement_x.speed.w < 0) {
+        int leftX = obj->x;
+        int bottomY = obj->y + TILE_SIZE - 1;
+        int topY = obj->y;
+
+        int left = getTileValueForPosition(leftX);
+        int bottom = getTileValueForPosition(bottomY);
+        int top = getTileValueForPosition(topY);
+
+        char top_left = getTileLayerValueByIndex(top, left);
+        char bottom_left = getTileLayerValueByIndex(bottom, left);
+
+		if (!isPassableTile(top_left) || !isPassableTile(bottom_left)) {
+			obj->x = (left + 1) << 3;
+		}
+
+		/*
+		if (!this.passableTiles.includes(obj.top_left)
+			|| !this.passableTiles.includes(obj.bottom_left)) {
+			obj.x = (obj.left + 1) * tileMapHandler.tileSize;
+			obj.hitWall(AnimationHelper.facingDirections.left);
+		}
+		*/
+	}
+
+	// collision to the right
+	else if (obj->displacement_x.speed.w > 0) {
+        int rightX = obj->x + TILE_SIZE - 1;
+        int bottomY = obj->y + TILE_SIZE - 1;
+        int topY = obj->y;
+		
+        int right = getTileValueForPosition(rightX);
+        int bottom = getTileValueForPosition(bottomY);
+        int top = getTileValueForPosition(topY);
+		
+		char top_right = getTileLayerValueByIndex(top, right);
+		char bottom_right = getTileLayerValueByIndex(bottom, right);
+
+		if (!isPassableTile(top_right) || !isPassableTile(bottom_right)) {
+			obj->x = (right << 3) - (TILE_SIZE + 1);
+		}
+		/*
+		if (!this.passableTiles.includes(obj.top_right)
+			|| !this.passableTiles.includes(obj.bottom_right)) {
+			obj.x = obj.right * tileMapHandler.tileSize - (obj.width + 1);
+			obj.hitWall(AnimationHelper.facingDirections.right);
+		}
+		*/
+	}
+}
+
+void  checkCollisionsWithWorld(actor *obj, char cornerCorrection) {
+	checkTileCollisions(obj, cornerCorrection);
+	/*
+    static checkCollisionsWithWorld(obj, cornerCorrection = false) {
+        this.checkHazardsCollision(obj);
+        this.groundUnderFeet(obj);
+        obj.xspeed += obj.bonusSpeed;
+        this.checkTileCollisions(obj, cornerCorrection);
+        obj.xspeed -= obj.bonusSpeed;
+    }
+	*/
+}
+
 void handle_player_input() {
 	unsigned int joy = SMS_getKeysStatus();
+	char walking = 0;
+	
+	if (joy & PORT_A_KEY_LEFT) {
+		if (player.displacement_x.speed.w - PLAYER_GROUND_ACCELLERATION > -PLAYER_MAX_SPEED) {
+			player.displacement_x.speed.w -= PLAYER_GROUND_ACCELLERATION;
+		}
+		/*
+		if (player.xspeed - player.speed > newMaxSpeed * -1) {
+			player.xspeed -= player.speed;
+		}
+		else if (player.xspeed > newMaxSpeed * -1 && player.wallJumping) {
+			player.xspeed -= player.speed;
+		}
+		else {
+			if (player.swimming) {
+				player.xspeed = newMaxSpeed * -1;
+			}
+			else {
+				const restSpeed = player.currentMaxSpeed + player.xspeed;
+				if (restSpeed > 0) {
+					player.xspeed -= restSpeed;
+				}
+			}
+		}
+		*/
+		walking = 1;
+	} else if (joy & PORT_A_KEY_RIGHT) {
+		if (player.displacement_x.speed.w + PLAYER_GROUND_ACCELLERATION < PLAYER_MAX_SPEED) {
+			player.displacement_x.speed.w += PLAYER_GROUND_ACCELLERATION;
+		}
+		/*
+                if (player.xspeed + player.speed < newMaxSpeed) {
+                    player.xspeed += player.speed;
+                }
+                else if (player.xspeed < newMaxSpeed && player.wallJumping) {
+                    player.xspeed += player.speed;
+                }
+                else {
+                    if (player.swimming) {
+                        player.xspeed = newMaxSpeed;
+                    }
+                    else {
+                        const restSpeed = player.currentMaxSpeed - player.xspeed;
+                        if (restSpeed > 0) {
+                            player.xspeed += restSpeed;
+                        }
+                    }
+                }
+		*/
+		walking = 1;
+	}
 
+	if (!walking) {
+		player.displacement_x.speed.w = (player.displacement_x.speed.w >> 4) * (PLAYER_GROUND_FRICTION >> 4);
+		if (abs(player.displacement_x.speed.w) < 0x80) {
+			player.displacement_x.speed.w = 0;
+		}
+		/*
+        if (!player.fixedSpeed) {
+            player.xspeed *= player.friction;
+            if (Math.abs(player.xspeed) < 0.5) {
+                player.xspeed = 0;
+            }
+        }
+		*/
+	}	
+}
+
+void move_player() {
+	checkCollisionsWithWorld(&player, 1);	
 }
 
 void draw_background_map(void *map) {
@@ -116,18 +275,17 @@ char gameplay_loop() {
 		
 		if (obj->tile == TILE_LEVEL_START) {
 			init_actor(&player, obj->x, obj->y - 8, 1, 1, TILE_PLAYER, 1);
+			player.displacement_x.displacement.w = 0;
+			player.displacement_x.speed.w = 0;
+			player.displacement_y.displacement.w = 0;
+			player.displacement_y.speed.w = 0;
 		}
 	}
 	
 	while (1) {
-		joy = SMS_getKeysStatus();
+		handle_player_input();
+		move_player();
 		
-		if (joy & PORT_A_KEY_LEFT) {
-			player.x--;
-		} else if (joy & PORT_A_KEY_RIGHT) {
-			player.x++;
-		}
-
 		SMS_initSprites();	
 
 		// Draw sprites
@@ -152,8 +310,6 @@ char gameplay_loop() {
 		SMS_waitForVBlank();
 		SMS_copySpritestoSAT();	
 	}
-
-	return 0;
 }
 
 void main() {
@@ -163,6 +319,6 @@ void main() {
 }
 
 SMS_EMBED_SEGA_ROM_HEADER(9999,0); // code 9999 hopefully free, here this means 'homebrew'
-SMS_EMBED_SDSC_HEADER(0,5, 2024,1,28, "Haroldo-OK\\2024", "Pocket Platformer Converter",
+SMS_EMBED_SDSC_HEADER(0,6, 2024,1,31, "Haroldo-OK\\2024", "Pocket Platformer Converter",
   "Convert Pocket Platformer Projects to SMS.\n"
   "Built using devkitSMS & SMSlib - https://github.com/sverx/devkitSMS");
